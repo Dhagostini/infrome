@@ -1,7 +1,7 @@
 import requests
-from bs4 import BeautifulSoup
 import urllib3
 from urllib.parse import urljoin
+from bs4 import BeautifulSoup
 
 # Desabilita warnings de SSL
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -25,51 +25,40 @@ BASE_DOWNLOAD_URL = (
     'downloadDocumentoCVM?idDocumento={}'
 )
 
-def fetch_documents(cnpj: str) -> dict:
-    '''
-    Consulta documentos via JSON e, se falhar, faz fallback no HTML.
-    Retorna dict {nome_arquivo: conteudo_xml}.
-    '''
+def fetch_document_links(cnpj: str) -> dict:
+    """
+    Consulta o endpoint JSON ou HTML e retorna dict {nome_arquivo: url_download}.
+    """
     session = requests.Session()
-    resultado = {}
+    links = {}
 
-    # 1. Tenta JSON via endpoint
+    # Tenta JSON via endpoint
     json_headers = HEADERS.copy()
     json_headers['Accept'] = 'application/json, text/javascript'
     payload = {'cnpjFundo': cnpj}
-    r_json = session.post(JSON_URL, headers=json_headers, data=payload,
-                          verify=False, timeout=15)
-    if r_json.ok:
+    resp = session.post(JSON_URL, headers=json_headers, data=payload,
+                        verify=False, timeout=15)
+    if resp.ok:
         try:
-            j = r_json.json()
-            for row in j.get('data', []):
-                doc_id = row.get('idDocumento') or row.get('IDDOCUMENTO')
-                nome = row.get('nmArquivo') or row.get('nomeArquivo') or f'documento_{doc_id}.xml'
-                download_url = BASE_DOWNLOAD_URL.format(doc_id)
-                r = session.get(download_url, headers=HEADERS,
-                                 verify=False, timeout=15)
-                r.raise_for_status()
-                resultado[nome] = r.text
-            if resultado:
-                return resultado
+            data = resp.json().get('data', [])
+            for item in data:
+                doc_id = item.get('idDocumento') or item.get('IDDOCUMENTO')
+                nome = item.get('nmArquivo') or item.get('nomeArquivo') or f'documento_{doc_id}.xml'
+                links[nome] = BASE_DOWNLOAD_URL.format(doc_id)
+            if links:
+                return links
         except ValueError:
             pass
 
-    # 2. Fallback: página HTML
+    # Fallback HTML
     resp = session.get(BASE_URL.format(cnpj), headers=HEADERS,
                        verify=False, timeout=15)
     resp.raise_for_status()
     soup = BeautifulSoup(resp.text, 'lxml')
-
-    # busca links diretos para download de XML
     for a in soup.select('a[href*="downloadDocumentoCVM"][href$=".xml"]'):
         href = a['href']
         doc_id = ''.join(filter(str.isdigit, href))
-        nome = a.text.strip() or f'documento_{doc_id}.xml'
-        download_url = urljoin(resp.url, href)
-        r = session.get(download_url, headers=HEADERS,
-                         verify=False, timeout=15)
-        r.raise_for_status()
-        resultado[nome] = r.text
+        nome = a.get_text(strip=True) or f'documento_{doc_id}.xml'
+        links[nome] = urljoin(resp.url, href)
 
-    return resultado
+    return links
