@@ -9,16 +9,14 @@ def get_informes(cnpj):
     response = requests.get(url, verify=False)
     
     if response.status_code != 200:
-        return None
+        return f"Erro ao acessar o site. Status code: {response.status_code}"
     
-    # Usando BeautifulSoup para parsear o HTML
     soup = BeautifulSoup(response.text, 'html.parser')
     
-    # Encontrando os links para download dos informes
-    links = []
-    for a in soup.find_all('a', href=True):
-        if 'pdf' in a['href']:
-            links.append(a['href'])
+    links = [a['href'] for a in soup.find_all('a', href=True) if 'pdf' in a['href']]
+    
+    if not links:
+        return "Não foi possível encontrar links para os informes."
     
     return links
 
