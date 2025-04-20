@@ -10,18 +10,25 @@ warnings.filterwarnings('ignore', message='Unverified HTTPS request')
 
 # Função para obter links de arquivos XML a partir do CNPJ do fundo
 def get_xml_links(cnpj: str) -> list:
+    import re
     url = f"https://fnet.bmfbovespa.com.br/fnet/publico/abrirGerenciadorDocumentosCVM?cnpjFundo={cnpj}"
     resp = requests.get(url, verify=False)
     resp.raise_for_status()
-    soup = BeautifulSoup(resp.text, "html.parser")
+    text = resp.text
+    soup = BeautifulSoup(text, "html.parser")
     links = []
-    # Busca links de download de documentos (XML ou outros)
+    # Captura links explícitos nos <a href>
     for a in soup.find_all("a", href=True):
         href = a["href"]
-        # identificador de downloadDocumento gera o XML
         if "downloadDocumento" in href:
             full = href if href.startswith("http") else f"https://fnet.bmfbovespa.com.br{href}"
             links.append(full)
+    # Fallback: capturar chamadas em JavaScript (onclick)
+    doc_ids = re.findall("downloadDocumento\('(?P<id>\d+)'\)", text)
+    for doc_id in set(doc_ids):
+        doc_url = f"https://fnet.bmfbovespa.com.br/fnet/publico/downloadDocumento?id={doc_id}"
+        if doc_url not in links:
+            links.append(doc_url)
     return links
 
 # Função para baixar e parsear um arquivo XML em DataFrame e metadados
