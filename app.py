@@ -7,7 +7,7 @@ import pandas as pd
 # Função para obter links de arquivos XML a partir do CNPJ do fundo
 def get_xml_links(cnpj: str) -> list:
     url = f"https://fnet.bmfbovespa.com.br/fnet/publico/abrirGerenciadorDocumentosCVM?cnpjFundo={cnpj}"
-    resp = requests.get(url)
+    resp = requests.get(url,, verify=False)
     resp.raise_for_status()
     soup = BeautifulSoup(resp.text, "html.parser")
     links = []
