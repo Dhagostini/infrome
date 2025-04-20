@@ -1,5 +1,5 @@
 import streamlit as st
-from utils import fetch_documents
+from utils import fetch_document_links
 
 st.set_page_config(
     page_title='CVM Scraper',
@@ -16,18 +16,14 @@ cnpj = st.text_input(
 
 if st.button('Buscar') and cnpj:
     try:
-        with st.spinner('Consultando...'):
-            docs = fetch_documents(cnpj)
+        with st.spinner('Buscando links...'):
+            docs = fetch_document_links(cnpj)
 
         if docs:
-            st.subheader('Documentos encontrados:')
-            for idx, nome in enumerate(docs.keys(), 1):
-                st.write(f'{idx}. {nome}')
-            st.markdown('---')
-            for nome, xml in docs.items():
-                with st.expander(nome):
-                    st.code(xml, language='xml')
+            st.subheader('Documentos disponíveis para download:')
+            for idx, (nome, url) in enumerate(docs.items(), 1):
+                st.write(f"{idx}. [{nome}]({url})")
         else:
-            st.warning('Nenhum documento XML encontrado para este CNPJ.')
+            st.warning('Nenhum documento encontrado para este CNPJ.')
     except Exception as e:
         st.error(f'Erro ao consultar: {e}')
