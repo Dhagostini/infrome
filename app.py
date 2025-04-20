@@ -27,7 +27,7 @@ st.title("Consulta de Informes Mensais")
 cnpj = st.text_input("Digite os últimos dígitos do CNPJ do fundo:")
 
 if cnpj:
-    full_cnpj = f"22340978000135{cnpj}"  # Adicionando os últimos dígitos ao CNPJ fixo
+    full_cnpj = f"{cnpj}"  # Adicionando os últimos dígitos ao CNPJ fixo
     informes = get_informes(full_cnpj)
     
     if informes:
