@@ -13,6 +13,9 @@ def get_informes(cnpj):
     
     soup = BeautifulSoup(response.text, 'html.parser')
     
+    # Imprimir o conteúdo da página para verificar a estrutura
+    print(soup.prettify())  # Para debug
+    
     links = [a['href'] for a in soup.find_all('a', href=True) if 'pdf' in a['href']]
     
     if not links:
