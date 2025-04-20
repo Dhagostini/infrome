@@ -15,9 +15,11 @@ def get_xml_links(cnpj: str) -> list:
     resp.raise_for_status()
     soup = BeautifulSoup(resp.text, "html.parser")
     links = []
+    # Busca links de download de documentos (XML ou outros)
     for a in soup.find_all("a", href=True):
         href = a["href"]
-        if href.lower().endswith(".xml"):
+        # identificador de downloadDocumento gera o XML
+        if "downloadDocumento" in href:
             full = href if href.startswith("http") else f"https://fnet.bmfbovespa.com.br{href}"
             links.append(full)
     return links
