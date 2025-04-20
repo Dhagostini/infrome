@@ -2,10 +2,11 @@ import streamlit as st
 import requests
 from bs4 import BeautifulSoup
 
+
 # Função para obter os links dos informes
 def get_informes(cnpj):
     url = f'https://fnet.bmfbovespa.com.br/fnet/publico/abrirGerenciadorDocumentosCVM?cnpjFundo={cnpj}'
-    response = requests.get(url)
+    response = requests.get(url, verify=False)
     
     if response.status_code != 200:
         return None
