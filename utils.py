@@ -43,7 +43,7 @@ def fetch_document_links(cnpj: str) -> dict:
     }
     json_headers = HEADERS.copy()
     json_headers['Accept'] = 'application/json, text/javascript'
-    r = session.post(JSON_URL, headers=json_headers, data=payload,
+    r = session.get(JSON_URL, headers=json_headers, data=payload,
                      verify=False, timeout=15)
     if r.ok:
         try:
