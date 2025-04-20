@@ -20,6 +20,10 @@ if st.button('Buscar') and cnpj:
             docs = fetch_documents(cnpj)
 
         if docs:
+            st.subheader('Documentos encontrados:')
+            for idx, nome in enumerate(docs.keys(), 1):
+                st.write(f'{idx}. {nome}')
+            st.markdown('---')
             for nome, xml in docs.items():
                 with st.expander(nome):
                     st.code(xml, language='xml')
